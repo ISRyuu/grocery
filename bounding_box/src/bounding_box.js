@@ -10,10 +10,8 @@ class BoundingBox extends React.Component {
         this.width = props.width ? props.width: 800;
         this.draw = this.draw.bind(this);
         this.drawCircles = this.drawCircles.bind(this);
-        this.inited = false;
 
         this.circlePositions = [];
-        this.generateData(13);        
     }
 
     drawCircle(ctx, x, y, radius, color) {
@@ -27,6 +25,7 @@ class BoundingBox extends React.Component {
     }
 
     generateData(n) {
+        this.circlePositions = [];        
         let margin = 0.3;
         let widthMarginOffset = margin * this.width;
         let heightMarginOffset = margin * this.height;
@@ -60,7 +59,7 @@ class BoundingBox extends React.Component {
 
         let eigTuples = eigVectors.map((v, i) => [eigValues[i], v]);
         eigTuples.sort((a, b) => b[0] - a[0]);
-    
+        this.eigTuples = eigTuples;
         let eigVectorP = eigTuples[0][1]; // principle
         let eigVectorS = eigTuples[1][1];  // second
 
@@ -79,7 +78,7 @@ class BoundingBox extends React.Component {
             maxS = Math.max(proj, maxS);
         }
 
-        // clockwise order
+        // notice that the order matters for drawing
         let p1 = [eigVectorP[0] * maxP + eigVectorS[0] * maxS + x_mean , eigVectorP[1] * maxP + eigVectorS[1] * maxS + y_mean];
         let p2 = [eigVectorP[0] * maxP + eigVectorS[0] * minS + x_mean, eigVectorP[1] * maxP + eigVectorS[1] * minS + y_mean];        
         let p3 = [eigVectorP[0] * minP + eigVectorS[0] * minS + x_mean, eigVectorP[1] * minP + eigVectorS[1] * minS + y_mean];
@@ -115,7 +114,15 @@ class BoundingBox extends React.Component {
     }
     
     render () {
-        return <Canvas draw={this.draw} height={this.height} width={this.width}/>;
+        this.generateData(13);
+        return (
+            <React.Fragment>
+            <Canvas draw={this.draw} height={this.height} width={this.width}/>            
+            <h3>Bounding Box (by PCA)</h3>            
+            <p>{this.eigTuples[0][0]}: [{this.eigTuples[0][1].join(', ')}]</p>
+            <p>{this.eigTuples[1][0]}: [{this.eigTuples[1][1].join(', ')}]</p>            
+            </React.Fragment>
+        );
     }
 }
 
