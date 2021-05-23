@@ -112,6 +112,23 @@ class SvgGrid extends React.Component {
         return path.reverse();
     }
 
+    jpsCalcDistanceBetweenJumpPoint(posA, posB) {
+        let xA, yA = posA;
+        let xB, yB = posB;
+        
+        if (xA == xB) {
+            return Math.abs(yA - yB) * CellDistance;
+        } else if (yA == yB) {
+            return Math.abs(xA - xB) * CellDistance;
+        } else {
+            if (Math.abs(xA - xB) != Math.abs(yA - yB)) {
+                alert("ERROR: Math.abs(xA - xB) != Math.abs(yA - yB)")
+                return;
+            }
+            return (xA - xB) * DiagDistance;
+        }
+    }
+
     astar(bitmap) {
         let cost_to_point = new Proxy({}, {
             get: (obj, name) => name in obj ? obj[name] : Number.POSITIVE_INFINITY
@@ -167,8 +184,90 @@ class SvgGrid extends React.Component {
         return [];
     }
 
-    jps() {
-        
+    jpsHorizotallySearch(bitmap, pos, dir_x) {
+        let posX, posY = pos;
+        let aboveY = posY + 1;
+        let belowY = posY - 1;
+        let searchAbove = 0 <= aboveY < this.height;
+        let searchBelow = 0 <= belowY < this.height;
+
+        let jumpPoints = [];
+        for (let x = posX; 0 <= x < this.width-1; x+=dirX) {
+            if (bitmap[x][posY] == Obstacle) {
+                return [];
+            }
+
+            if (searchAbove) {
+                if (bitmap[x][aboveY] == Obstacle) {
+                    if (0 <= x + dirX < this.width) {
+                        if (bitmap[x+dirX][aboveY] != Obstacle) {
+                            jumpPoints.append([x, aboveY]);
+                        }
+                    }
+                }
+            }
+
+            if (searchBelow) {
+                if (bitmap[x][belowY] == Obstacle) {
+                    if (0 <= x + dirX < this.height) {
+                        if (bitmap[x+dirX][belowY] != Obstacle) {
+                            jumpPoints.append([x, belowy]);
+                        }                       
+                    }
+                }
+            }
+        }
+    }
+
+    jpsVerticallySearch(bitmap, pos, dirY) {
+        let posX, posY = pos;
+    }
+
+    jpsDiagonallySearch(bitmap, pos, dir) {
+        let dirX, dirY = dir;
+    }
+
+    findJumpPoints(bitmap, pos) {
+
+    }
+
+    jpsConstructPath(jumpPoints) {
+        return jumpPoints;
+    }
+
+    jps(bitmap) {   
+        let openset = [];
+        openset.push(this.endpos);
+        let opensetCost = new Proxy({}, {
+            get: (obj, name) => name in obj ? obj[name] : Math.POSITIVE_INFINITY
+        });
+
+        let costToPoint = new Proxy({}, {
+            get: (obj, name) => name in obj ? obj[name] : Math.POSITIVE_INFINITY
+        });
+
+        let predecessors = {};
+        let path = [];
+
+        while (openset.length > 0) {
+            openset.sort((a, b) => opensetCost[b] - opensetCost[a]);
+            let currentPos = openset.pop();
+            let currentCost = opensetCost[pos];
+            if (this.isDestination(pos)) {
+                return this.jpsConstructPath();
+            }
+            let jumpPoints = this.findJumpPoints(bitmap, pos);
+            for (let jump of jumpPoints) {
+                let newCost = currentCost + this.calcSquaredDistanceToDest(jump);
+                if (newCost < costToPoint[jump]) {
+                    opensetCost[jump] = newCost; 
+                    predecessors[jump] = currentPos;
+                    costToPoint[jump] = b
+                }
+                let distance = this.calcSquaredDistanceToDest(jump);
+            }
+
+        }
     }
 
     getColor(nValue) {
