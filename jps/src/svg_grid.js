@@ -184,7 +184,7 @@ class SvgGrid extends React.Component {
         return [];
     }
 
-    jpsHorizotallySearch(bitmap, pos, dir_x) {
+    jpsHorizontallySearch(bitmap, pos, dirX) {
         let posX, posY = pos;
         let aboveY = posY + 1;
         let belowY = posY - 1;
@@ -211,7 +211,7 @@ class SvgGrid extends React.Component {
                 if (bitmap[x][belowY] == Obstacle) {
                     if (0 <= x + dirX < this.height) {
                         if (bitmap[x+dirX][belowY] != Obstacle) {
-                            jumpPoints.append([x, belowy]);
+                            jumpPoints.append([x, belowY]);
                         }                       
                     }
                 }
@@ -227,8 +227,26 @@ class SvgGrid extends React.Component {
         let dirX, dirY = dir;
     }
 
-    findJumpPoints(bitmap, pos) {
-
+    findJumpPoint(bitmap, pos) {
+        let neighbours = self.getNeighbours(...currentPos);
+        for (let neighbour of neighbours) {
+            let neighbourX, neighbourY = neighbour;
+            let currentPosX, currentPosY = currentPos;
+            let dirX = currentPosX - neighbourX;
+            let dirY = currentPosY - neighbourY;
+            let dir = [dirX, dirY];
+        
+            if (dirX !== 0 && dirY !== 0) {
+                // search diagonally
+                return this.jpsDiagonallySearch(bitmap, pos, dir);
+            } else if (dirX == 0) {
+                // search horizontally
+                return this.jpsVerticallySearch(bitmap, pos, dir);
+            } else if (dirY == 0) {
+                // search vertically
+                return this.jpsHorizontallySearch(bitmap, pos, dir);
+            }
+        }
     }
 
     jpsConstructPath(jumpPoints) {
@@ -252,17 +270,18 @@ class SvgGrid extends React.Component {
         while (openset.length > 0) {
             openset.sort((a, b) => opensetCost[b] - opensetCost[a]);
             let currentPos = openset.pop();
-            let currentCost = opensetCost[pos];
-            if (this.isDestination(pos)) {
+            let currentCost = opensetCost[currentPos];
+            if (this.isDestination(currentPos)) {
                 return this.jpsConstructPath();
             }
-            let jumpPoints = this.findJumpPoints(bitmap, pos);
+            
+            let jumpPoints = this.findJumpPoints(bitmap, currentPos);
             for (let jump of jumpPoints) {
                 let newCost = currentCost + this.calcSquaredDistanceToDest(jump);
                 if (newCost < costToPoint[jump]) {
                     opensetCost[jump] = newCost; 
                     predecessors[jump] = currentPos;
-                    costToPoint[jump] = b
+                    costToPoint[jump] = 1;
                 }
                 let distance = this.calcSquaredDistanceToDest(jump);
             }
